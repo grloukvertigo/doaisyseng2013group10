@@ -5,6 +5,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
@@ -19,14 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.awt.FlowLayout;
 import javax.swing.SwingConstants;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 
 public class Start_Frame extends JFrame{
 	
 	private static final long serialVersionUID = 1L;
 	private Name_Frame name;
+//	private Admin_Frame admin;
 	private Image background;
 	private BackgroundPanel back;
 	private JPanel quitPanel, helpPanel;
@@ -59,7 +58,6 @@ public class Start_Frame extends JFrame{
 		}
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setUndecorated(true);
-		
 		back = new BackgroundPanel(background);
 		back.setTransparentAdd(true);
 		setContentPane(back);
@@ -75,7 +73,7 @@ public class Start_Frame extends JFrame{
 			e.printStackTrace();
 		}
 
-		//
+		//vazo to label sto north tou arxikou border panel
 		title = new JLabel("\u0394\u03B9\u03AC\u03BB\u03B5\u03BE\u03B5 \u03C4\u03BF \u03C1\u03CC\u03BB\u03BF \u03C3\u03BF\u03C5");
 		title.setFont(new Font("Sylfaen", Font.PLAIN, 40));
 		title.setForeground(Color.BLACK);
@@ -84,14 +82,21 @@ public class Start_Frame extends JFrame{
 		
 		//
 		helpPanel = new JPanel();
-		GridBagLayout gbl_helpPanel = new GridBagLayout();
-		helpPanel.setLayout(gbl_helpPanel);
+		helpPanel.setBorder(new EmptyBorder(50, 100, 50, 100));
+		helpPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 200));
+		comboBox = new JComboBox();
+		comboBox.setFont(new Font("Sylfaen", Font.PLAIN, 20));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"\u0394\u03B9\u03B1\u03C7\u03B5\u03B9\u03C1\u03B9\u03C3\u03C4\u03AE\u03C2", "\u03A7\u03C1\u03AE\u03C3\u03C4\u03B7\u03C2"}));
+		helpPanel.add(comboBox);
 		cont = new JButton("\u03A3\u03C5\u03BD\u03AD\u03C7\u03B9\u03C3\u03B5");
 		cont.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				clip.stop();
 				if (comboBox.getSelectedItem().toString().equals("\u0394\u03B9\u03B1\u03C7\u03B5\u03B9\u03C1\u03B9\u03C3\u03C4\u03AE\u03C2")){
 					System.exit(0);
+					//Start_Frame.this.setVisible(false);
+					//admin = new Admin_Frame();
+					//admin.setVisible(true);
 				}
 				else
 				{
@@ -101,22 +106,11 @@ public class Start_Frame extends JFrame{
 				}
 			}
 		});
-		comboBox = new JComboBox();
-		comboBox.setFont(new Font("Sylfaen", Font.PLAIN, 20));
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"\u0394\u03B9\u03B1\u03C7\u03B5\u03B9\u03C1\u03B9\u03C3\u03C4\u03AE\u03C2", "\u03A7\u03C1\u03AE\u03C3\u03C4\u03B7\u03C2"}));
-		GridBagConstraints gbc_comboBox = new GridBagConstraints();
-		gbc_comboBox.insets = new Insets(0, 0, 5, 0);
-		gbc_comboBox.gridx = 0;
-		gbc_comboBox.gridy = 1;
-		helpPanel.add(comboBox, gbc_comboBox);
 		cont.setFont(new Font("Sylfaen", Font.PLAIN, 20));
-		GridBagConstraints gbc_cont = new GridBagConstraints();
-		gbc_cont.gridx = 0;
-		gbc_cont.gridy = 2;
-		helpPanel.add(cont, gbc_cont);
+		helpPanel.add(cont);
 		back.add(helpPanel, BorderLayout.CENTER);
 		
-		//
+		//vazo to quitpanel sto south tou arxikou panel
 		quitPanel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) quitPanel.getLayout();
 		flowLayout.setAlignment(FlowLayout.RIGHT);

@@ -1,429 +1,224 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Random;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.imageio.ImageIO;
 import javax.swing.*;
-
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
+import javax.swing.border.EmptyBorder;
 
 public class Board extends JFrame{
 	
 	private static final long serialVersionUID = 1L;
-	private JButton piso, quit, plusLife, plusAttack, plusDefence;
-	private JLabel title, imageLabel, attacklbl, defencelbl, life, coinlbl, dicelbl, hero2lbl, skillpointlbl;
+	private JButton diceButton;
+	private JButton coinButton;
+	private JLabel heroLabel;
+	private JLabel monsterLabel;
+	private JTextArea heroStatLabel;
+	private JTextArea monsterStatLabel;
+	private JLabel backLabel;
 	private Random r;
-	private JPanel buttonPanel, imagePanel, quitPanel;
-	private User xristis1, xristis2;
+	private JPanel mainPanel;
+	private User xristis;
 	private MyGlassPane myGlassPane;
-	private int row, size, playerX, playerY, widthSize, heightSize;
-	private BackgroundPanel back;
-	private Image background, hero, resize ,hero2;
-	private Clip clip;
-	private AudioInputStream audio;
-	private Pick_A_Hero pick;
-	private DiceListener dlistener;
-	private ImageIcon image;
-	private UpgradeSkillListener skillListener;
+	private int row, size;
+	private int playerX;
+	private int playerY;
 	
-	private ArrayList<User> players;
-	
-	public Board(ArrayList<User> p, ImageIcon heroimage){
-		players=new ArrayList<User>();
-		players=p;
-		xristis1 = players.get(0);
-		if ((players.size())>1){
-			xristis2=players.get(1);
-		}
+	public Board(User user){
+		xristis = user;
+		row=1;
+		playerX=0;
+		playerY=0;
 		
-		//ImageIcon heroimage
-		image =heroimage;
-		row = 1;
-		playerX = 0;
-		playerY = 0;
-		
-		try {
-			background = ImageIO.read(new File("background.jpg"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		setExtendedState(JFrame.MAXIMIZED_BOTH);
-		setUndecorated(true);
-		back = new BackgroundPanel(background);
-		
-		back.setLayout(null);
-		
-		try{
-			audio = AudioSystem.getAudioInputStream(new File("battle_theme.wav").getAbsoluteFile());
-			clip = AudioSystem.getClip();
-			clip.open(audio);
-			clip.loop(Clip.LOOP_CONTINUOUSLY);
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		dlistener=new DiceListener();
-		
-		
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		double fwidth = screenSize.getWidth();
-		double fheight = screenSize.getHeight();
-		int iwidth = (int)fwidth;
-		int iheight = (int)fheight;
-		widthSize = iwidth / 20;
-		heightSize = iheight / 10;
-		
-		//
-		title = new JLabel("\u03A4\u03B1\u03BC\u03C0\u03BB\u03CC");
-		title.setFont(new Font("Sylfaen", Font.PLAIN, 40));
-		title.setHorizontalAlignment(SwingConstants.CENTER);
-		title.setBounds((iwidth/2),5,(widthSize*2),(heightSize));
-		
-		myGlassPane = new MyGlassPane();
+		myGlassPane=new MyGlassPane();
 		this.setGlassPane(myGlassPane);
 		myGlassPane.setVisible(true);
-				
-		//
-		buttonPanel = new JPanel();
-		GridLayout gbl_buttonPanel = new GridLayout(1,2);
-		buttonPanel.setLayout(gbl_buttonPanel);
 		
-		buttonPanel.setBounds((widthSize*13),(heightSize*2),(widthSize*6),(heightSize*2));
-		back.add(buttonPanel);
+		setBounds(100, 100, 1800, 1000);
+		mainPanel = new JPanel();
+		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(mainPanel);
+		mainPanel.setLayout(null);
 		
-		ImageIcon  coin=new  ImageIcon("coin.gif");
-		Image coinImage=coin.getImage();
-		coinlbl=new JLabel();
-		Image coinResizedImage = coinImage.getScaledInstance((buttonPanel.getWidth()/2), buttonPanel.getHeight(), 0);
-		coinlbl.setIcon(new ImageIcon(coinResizedImage));
-		buttonPanel.add(coinlbl);
+		diceButton=new JButton("Roll");
+		diceButton.setBounds(1502,200, 298, 50);
+		//diceButton.setBackground(Color.BLACK);
+		diceButton.setForeground(Color.RED);
+		mainPanel.add(diceButton);
 		
+		coinButton=new JButton("Flip");
+		coinButton.setBounds(1200,200, 300, 50);
+		//coinButton.setBackground(Color.BLACK);
+		coinButton.setForeground(Color.RED);
+		mainPanel.add(coinButton);
 		
-		ImageIcon dice=new ImageIcon("dice.gif");
-		Image diceImage=dice.getImage();
-		dicelbl=new JLabel();
-		Image diceResizedImage= diceImage.getScaledInstance((buttonPanel.getWidth()/2),buttonPanel.getHeight(),0);
-		dicelbl.setIcon(new ImageIcon(diceResizedImage));
-		buttonPanel.add(dicelbl);
-		dicelbl.addMouseListener(dlistener);
+		ButtonListener listener = new ButtonListener();
+		diceButton.addActionListener(listener);
+
+		//dokimastikoi listener
 		
-		imagePanel = new JPanel();
-		imagePanel.setBounds((widthSize*13),(heightSize*4),(widthSize*6),(heightSize*5));
-		GridBagLayout gbl_imagePanel = new GridBagLayout();
-		imagePanel.setLayout(gbl_imagePanel);
-		back.add(imagePanel);
+		CoinButtonListener coinListener=new CoinButtonListener();
+		coinButton.addActionListener(coinListener);
 		
-		imageLabel = new JLabel();
-		hero = image.getImage();
-		resize = hero.getScaledInstance((widthSize*3), (heightSize*3), 0);
-		imageLabel.setIcon(new ImageIcon(resize));
-		GridBagConstraints gbc_imageLabel = new GridBagConstraints();
-		gbc_imageLabel.fill=GridBagConstraints.HORIZONTAL;
-		gbc_imageLabel.insets = new Insets(0, 0, 0, 5);
-		gbc_imageLabel.gridx = 0;
-		gbc_imageLabel.gridy = 0;
-		//gbc_imageLabel.anchor=GridBagConstraints.FIRST_LINE_START;
-		imagePanel.add(imageLabel, gbc_imageLabel);
+		ImageIcon  heroIcon=new  ImageIcon("hero.jpg");
+		Image heroImage=heroIcon.getImage();
+		heroLabel=new JLabel();
+		heroLabel.setBounds(1200,300,300,300);
+		Image heroResizedImage = heroImage.getScaledInstance(heroLabel.getWidth(), heroLabel.getHeight(), 0);
+		heroLabel.setIcon(new ImageIcon(heroResizedImage));
 		
-		hero2lbl=new JLabel();
-		//tha emfanizetai efoson exoun epilegei 2 paixtes
-		ImageIcon hero2Icon=new ImageIcon("Zeus.jpg");
-		//tha pairnei timh analogh me to ti exei dialeksei o deyteros paixths
-		Image hero2Image=hero2Icon.getImage();
-		Image hero2ResizedImage= hero2Image.getScaledInstance((widthSize),(heightSize),0);
-		hero2lbl.setIcon(new ImageIcon(hero2ResizedImage));
-		GridBagConstraints gbc_hero2lbl=new GridBagConstraints();
-		gbc_hero2lbl.insets=new Insets(0,(2*widthSize),0,0);
-		gbc_hero2lbl.gridx=1;
-		gbc_hero2lbl.gridy=0;
-		gbc_hero2lbl.anchor=GridBagConstraints.FIRST_LINE_END;
-		imagePanel.add(hero2lbl, gbc_hero2lbl);
-		
-		attacklbl = new JLabel("\u0388\u03C0\u03AF\u03B8\u03B5\u03C3\u03B7: "+xristis1.getAttack());
-		attacklbl.setForeground(Color.ORANGE);
-		attacklbl.setFont(new Font("Sylfaen", Font.BOLD, 20));
-		GridBagConstraints gbc_attack = new GridBagConstraints();
-		gbc_attack.insets = new Insets(0, 0, 0, 5);
-		gbc_attack.gridx = 0;
-		gbc_attack.gridy = 1;
-		imagePanel.add(attacklbl, gbc_attack);
-		
-		defencelbl = new JLabel("\u0386\u03BC\u03C5\u03BD\u03B1: "+xristis1.getDefence());
-		defencelbl.setForeground(Color.ORANGE);
-		defencelbl.setFont(new Font("Sylfaen", Font.BOLD, 20));
-		GridBagConstraints gbc_defence = new GridBagConstraints();
-		gbc_defence.insets = new Insets(0, 0, 0, 5);
-		gbc_defence.gridx = 0;
-		gbc_defence.gridy = 2;
-		imagePanel.add(defencelbl, gbc_defence);
-		
-		life = new JLabel("\u0396\u03C9\u03AE: "+xristis1.getHealth());
-		life.setForeground(Color.ORANGE);
-		life.setFont(new Font("Sylfaen", Font.BOLD, 20));
-		GridBagConstraints gbc_life = new GridBagConstraints();
-		gbc_life.gridx = 0;
-		gbc_life.gridy = 3;
-		imagePanel.add(life, gbc_life);
-		
-		plusLife=new JButton("+");
-		plusLife.setForeground(Color.ORANGE);
-		plusLife.setBackground(Color.BLACK);
-		plusLife.setFont(new Font("Sylfaen",Font.BOLD,30));
-		GridBagConstraints c=new GridBagConstraints();
-		c.gridx=1;
-		c.gridy=3;
-		imagePanel.add(plusLife,c);
-		plusDefence=new JButton("+");
-		plusDefence.setForeground(Color.ORANGE);
-		plusDefence.setBackground(Color.BLACK);
-		plusDefence.setFont(new Font("Sylfaen",Font.BOLD,30));
-		c.gridx=1;
-		c.gridy=2;
-		imagePanel.add(plusDefence,c);
-		plusAttack=new JButton("+");
-		plusAttack.setForeground(Color.ORANGE);
-		plusAttack.setBackground(Color.BLACK);
-		plusAttack.setFont(new Font("Sylfaen",Font.BOLD,30));
-		c.gridx=1;
-		c.gridy=1;
-		imagePanel.add(plusAttack,c);
-		
-		skillpointlbl=new JLabel("Skill Points \n"+xristis1.getSkillpoints());
-		skillpointlbl.setFont(new Font("Sylfaen",Font.BOLD,20));
-		skillpointlbl.setForeground(Color.WHITE);
-		c.gridx=1;
-		c.gridy=4;
-		imagePanel.add(skillpointlbl, c);
-		
-		skillListener=new UpgradeSkillListener();
-		plusLife.addActionListener(skillListener);
-		plusDefence.addActionListener(skillListener);
-		plusAttack.addActionListener(skillListener);
+		mainPanel.add(heroLabel);
+		//gia thn eikona tou hrwa
 		
 		
-		r = new Random(System.currentTimeMillis());
+		ImageIcon  monsterIcon=new  ImageIcon("Cerberus.jpg");
+		Image monsterImage=monsterIcon.getImage();
+		monsterLabel=new JLabel();
+		monsterLabel.setBounds(1200,600,300,300);
+		Image monsterResizedImage = monsterImage.getScaledInstance(monsterLabel.getWidth(), monsterLabel.getHeight(), 0);
+		monsterLabel.setIcon(new ImageIcon(monsterResizedImage));
 		
-		//
-		quitPanel = new JPanel();
-		quit = new JButton("\u0388\u03BE\u03BF\u03B4\u03BF\u03C2");
-		quit.setFont(new Font("Sylfaen", Font.PLAIN, 20));
-		quit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				System.exit(0);
-			}
-		});
-		quitPanel.setLayout(new BorderLayout(0, 0));
+		mainPanel.add(monsterLabel);
+		//gia thn eikona tou antipalou
 		
-		piso = new JButton("\u03A0\u03AF\u03C3\u03C9");
-		piso.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				clip.stop();
-				Board.this.setVisible(false);
-				pick = new Pick_A_Hero(players);
-				pick.setVisible(true);
-			}
-		});
-		piso.setFont(new Font("Sylfaen", Font.PLAIN, 20));
-		quitPanel.add(piso, BorderLayout.WEST);
-		quitPanel.add(quit, BorderLayout.EAST);
-		quitPanel.setBounds((widthSize*18),(heightSize*9),(widthSize*2),(heightSize/2));
-		back.add(quitPanel);
+		heroStatLabel=new JTextArea();
+		heroStatLabel.setFont(new Font("Times New Roman",Font.BOLD,32));
+		heroStatLabel.setForeground(Color.WHITE);
+		heroStatLabel.setText("Skills \n Life:10 \n Damage: 50");
+		heroStatLabel.setBounds(1500,300,300,300);
+		heroStatLabel.setBackground(Color.BLACK);
+		heroStatLabel.setEditable(false);
+		//gia na min allazei
+		mainPanel.add(heroStatLabel);
+		//gia to label me ta statistika tou hrwa
 		
-		back.setTransparentAdd(true);
+		monsterStatLabel=new JTextArea();
+		monsterStatLabel.setFont(new Font("Times New Roman",Font.BOLD,32));
+		monsterStatLabel.setForeground(Color.WHITE);
+		monsterStatLabel.setText("Skills \n Life:10 \n Damage: 50");
+		monsterStatLabel.setBounds(1500,600,300,300);
+		monsterStatLabel.setBackground(Color.BLACK);
+		monsterStatLabel.setEditable(false);
+		mainPanel.add(monsterStatLabel);
+		//gia to label me ta statistika tou teratos
+		
+		ImageIcon  background=new  ImageIcon("background.jpg");
+		Image image=background.getImage();
+		backLabel=new JLabel();
+		backLabel.setBounds(0,0,this.getWidth(), this.getHeight());
+		Image resizedImage = image.getScaledInstance(backLabel.getWidth(), backLabel.getHeight(), 0);
+		backLabel.setIcon(new ImageIcon(resizedImage));
+		//prosarmogh eikonas fontou
+		
+		
+		
+		mainPanel.add(backLabel);
+		r=new Random(System.currentTimeMillis());
+		//this.setContentPane(mainPanel);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setSize(1760,1000);
 		this.setVisible(true);
-		this.setContentPane(back);
 	}
 	
-	@SuppressWarnings("serial")
 	class MyGlassPane extends JComponent{
-		private static final int ROWS = 6;
-		private static final int COLUMNS = 6;
+		private static final int ROWS =6;
+		private static final int COLUMNS =6;
+		//ενδεικτικά μεγέθη διαίρεσης τετραγώνων του board
+		
 		private int xCoord = 0;
 		private int yCoord = 0;
+		//αρχικές συντεταγμένες
 		
 		public void setXYCoordinates(int xValue, int yValue) {
+			//μεθοδος καθορισμού συντεταγμένων
 			xCoord = xValue;
 			yCoord = yValue;
 		}
 		
 		public void paintComponent(Graphics g) {
+			//επικάλυψη της paintcomponent
 			super.paintComponent(g);
 			
 			int sqSize = this.getHeight() / ROWS;
-			size = sqSize;
+			size=sqSize;
+			//για να αλλάζει το μέγεθος των γραμμών ανάλογα με το παράθυρο
 			
-			for(int i = 0; i < ROWS; i++) {
-				for(int j = 0; j < COLUMNS; j++) {
+			for(int i=0; i<ROWS; i++) {
+				for(int j=0; j<COLUMNS; j++) {
 					int x = j * sqSize;
 					int y = i * sqSize;
 					g.setColor(Color.YELLOW);
 					g.drawRect(x, y, sqSize, sqSize);
+					
 				}
 			}
 			
 			g.setColor(Color.RED);
 			g.fillOval(xCoord, yCoord, sqSize, sqSize);
-		}	
+			//αν αλλάξει το παράθυρο αφού έχουν γίνει κάποιες κινήσεις το πιόνι χάνει την στοίχισή του μέσα
+			//στο τετράγωνο... χρειάζεται άλλη μία repaint όταν κάνουμε resize το παράθυρο... ή να είναι fix
+			//το μέγεθός του...
+			
+		}
+		
 	}
 	
-class DiceListener implements MouseListener {
-
-	int diceButton;
-	@Override
-	public void mouseClicked(MouseEvent arg0) {
-			diceButton = r.nextInt(6) + 1;
-			System.out.println("zari "+diceButton);
+class ButtonListener implements ActionListener {
+		int dice;
+		public void actionPerformed(ActionEvent e) {
+			
+			
+			dice=r.nextInt(6)+1;
+			//zari kinhsewn
+			System.out.println("zari "+dice);
 			moveChar(getDice());
 			myGlassPane.setXYCoordinates(playerX, playerY);
 			myGlassPane.repaint();
-			switchChars();
-			}
-		
-		public void switchChars(){
-			//tha kaleitai mono an paizoun 2 paixtes
-			ImageIcon tempIcon=new ImageIcon();
-			Icon i=imageLabel.getIcon();
-			tempIcon=(ImageIcon)i;
-			//apothikeyw to icon ths megalhs eikonas
-			Image tempImage=tempIcon.getImage();
-			Image tempResizedImage = tempImage.getScaledInstance(hero2lbl.getWidth(), hero2lbl.getHeight(), 0);
-			//thn metasxhmatizw stis diastaseis tou mikrou label
-			i=hero2lbl.getIcon();
-			tempIcon=(ImageIcon)i;
-			tempImage=tempIcon.getImage();
-			hero2lbl.setIcon(new ImageIcon(tempResizedImage));
-			tempResizedImage=tempImage.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(),0);
-			imageLabel.setIcon(new ImageIcon(tempResizedImage));
-			
-			//allagh twn label me ta xarakthristika
-			
 		}
 		public int getDice(){
-			return diceButton;
+			return dice;
 		}
-		
 		public void moveChar(int dice){
-			for (int i = 0; i < dice; i++)
-			{
-				if (row % 2 == 0)
-				{
-					playerX -= size;
-					if(playerX < 0)
-					{
-						if(row != 6)
-						{
-						playerY += size;
+			for (int i=0;i<dice;i++){
+				if (row % 2==0){
+					playerX=playerX-size;
+					if((playerX)<0){
+						if(row!=6){
+						playerY=playerY+size;
 						row++;
-						playerX += size;
+						//allagh seiras an to pioni feygei eksw apo to tamplo
+						playerX=playerX+size;
 						}
-						else
-						{
-							i = dice;
-							playerX = 0;
-							playerY = playerY;
+						else{
+							
+							i=dice;
+							playerX=0;
+							playerY=playerY;
 							JOptionPane.showMessageDialog(null, "End of Stage");
-						}	
+						}
+							
 					}
+					//kinish aristera
 				}
-				else
-				{
-					playerX = playerX + size;
-					if (playerX + size > (6 * size))
-					{
-						playerY += size;
+				else{
+					playerX=playerX+size;
+					if (playerX+size>(6*size)){
+						playerY=playerY+size;
 						row++;
-						playerX -= size;
+						//allagh seiras an to pioni feygei eksw apo to tamplo
+						playerX=playerX-size;
 					}
+				//kinish deksia
 				}
 			}
+			
 		}
-	
-		// TODO Auto-generated method stub
-		
-
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
 	}
-
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-}
-
-public class UpgradeSkillListener implements ActionListener{
-
-	@Override
+class CoinButtonListener implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
-		double health=xristis1.getHealth();
-		double attack=xristis1.getAttack();
-		double defence=xristis1.getDefence();
-		int skillpoints=xristis1.getSkillpoints();
-		if(skillpoints>0){
-			if(e.getSource()==plusLife){
-				health++;
-				xristis1.setHealth(health);
-				skillpoints--;
-				xristis1.setSkillpoints(skillpoints);
-				skillpointlbl.setText("Skill Points" +xristis1.getSkillpoints());
-				life.setText("\u0396\u03C9\u03AE: "+xristis1.getHealth());
-			}
-			else if(e.getSource()==plusAttack){
-				attack++;
-				xristis1.setAttack(attack);
-				skillpoints--;
-				xristis1.setSkillpoints(skillpoints);
-				skillpointlbl.setText("Skill Points" +xristis1.getSkillpoints());
-				attacklbl.setText("\u0388\u03C0\u03AF\u03B8\u03B5\u03C3\u03B7: "+xristis1.getAttack());
-			}
-			else if(e.getSource()==plusDefence){
-				defence++;
-				xristis1.setDefence(defence);
-				skillpoints--;
-				xristis1.setSkillpoints(skillpoints);
-				skillpointlbl.setText("Skill Points" +xristis1.getSkillpoints());
-				defencelbl.setText("\u0386\u03BC\u03C5\u03BD\u03B1: "+xristis1.getDefence());
-			}
+		new DummyFrame();
 		}
-		else
-			JOptionPane.showMessageDialog(null,"You Don't Have Any Skill Points Available");
-	}
-	
 }
-
 }
